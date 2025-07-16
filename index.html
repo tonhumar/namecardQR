@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tạo vCard & QR tự động</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6">
+    <h1 class="text-2xl font-bold text-center text-blue-600">Tạo QR Danh Thiếp (vCard)</h1>
+
+    <div class="grid grid-cols-1 gap-4">
+      <input id="fullName" class="border border-gray-300 rounded-lg px-4 py-2" type="text" placeholder="Họ tên">
+      <input id="email" class="border border-gray-300 rounded-lg px-4 py-2" type="email" placeholder="Email">
+      <input id="phone" class="border border-gray-300 rounded-lg px-4 py-2" type="tel" placeholder="Số điện thoại">
+      <input id="title" class="border border-gray-300 rounded-lg px-4 py-2" type="text" placeholder="Chức vụ (tuỳ chọn)">
+      <input id="company" class="border border-gray-300 rounded-lg px-4 py-2" type="text" placeholder="Công ty (tuỳ chọn)">
+    </div>
+
+    <div id="qrContainer" class="flex justify-center mt-4 hidden">
+      <canvas id="qrCanvas" class="border rounded-lg p-2 bg-white"></canvas>
+    </div>
+
+    <div class="text-center">
+      <a id="downloadLink" href="#" download="contact.vcf" class="hidden mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Tải vCard (.vcf)</a>
+    </div>
+  </div>
+
+  <script>
+    const fields = ["fullName", "email", "phone", "title", "company"];
+    fields.forEach(id => {
+      document.getElementById(id).addEventListener("input", generateVCard);
+    });
+
+    const qr = new QRious({
+      element: document.getElementById('qrCanvas'),
+      size: 256,
+      value: ''
+    });
+
+    function generateVCard() {
+      const fullName = document.getElementById("fullName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const company = document.getElementById("company").value.trim();
+
+      if (!fullName || !email || !phone) {
+        document.getElementById("qrContainer").classList.add("hidden");
+        document.getElementById("downloadLink").classList.add("hidden");
+        return;
+      }
+
+      const vCardData = `BEGIN:VCARD
+VERSION:3.0
+FN:${fullName}
+EMAIL:${email}
+TEL:${phone}
+${title ? `TITLE:${title}` : ""}
+${company ? `ORG:${company}` : ""}
+END:VCARD`.trim();
+
+      // Cập nhật QR
+      qr.set({
+        value: vCardData
+      });
+      document.getElementById("qrContainer").classList.remove("hidden");
+
+      // Tạo file vCard
+      const blob = new Blob([vCardData], { type: "text/vcard" });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.getElementById("downloadLink");
+      downloadLink.href = url;
+      downloadLink.classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
